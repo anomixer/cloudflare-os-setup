@@ -30,6 +30,9 @@ Cloudflare OS 官方 README 的 Quick Start 只有一句話——「裝好 pnpm�
 本腳本把這些一次解決：自動裝 git / Node / pnpm（版本鎖定與 repo 一致）、clone 最新原始碼、
 套上 LAN patch、`pnpm install`、然後啟動。你只需要會跑一條指令。
 
+> **這個腳本是過渡方案。** 等原廠把上面的 issue 解掉（例如把 Node 安裝、pnpm 版本、以及
+> LAN 綁定都處理好），本腳本就沒有存在必要了。現在想先體驗的人，可以用這支腳本擋著用。
+
 ---
 
 ## 一、`cloudflare-os-setup.sh`（一鍵安裝）
