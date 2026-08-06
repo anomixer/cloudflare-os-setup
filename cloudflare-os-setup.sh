@@ -112,6 +112,95 @@ fi
 cd "$TARGET_DIR"
 
 # ---------------------------------------------------------------------------
+# 4.5 套用 run-dev-server.js 的 LAN patch（upstream repo 尚未包含 --lan 支援）
+# ---------------------------------------------------------------------------
+say "檢查 run-dev-server.js LAN patch"
+if grep -q 'const isLan = process.argv.includes("--lan")' run-dev-server.js; then
+  say "  已套用，跳過"
+else
+  LAN_PATCH="$(mktemp)"
+  cat > "$LAN_PATCH" <<'PATCH'
+diff --git a/run-dev-server.js b/run-dev-server.js
+index a5aba89..022bfde 100644
+--- a/run-dev-server.js
++++ b/run-dev-server.js
+@@ -13,6 +13,7 @@
+ import { existsSync, readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
+ import { execFileSync, spawn } from "node:child_process";
+ import { join, dirname } from "node:path";
++import { networkInterfaces } from "node:os";
+ import { fileURLToPath } from "node:url";
+ import { parse } from "jsonc-parser";
+ import { getWranglerPortFromBackendHost } from "./scripts/dev-server-config.js";
+@@ -45,6 +46,25 @@ loadDevVars();
+ 
+ const useWorkersAi = process.argv.includes("--use-workers-ai-binding");
+ 
++// By default Wrangler binds to 127.0.0.1, which is fine for local-only access. Pass
++// `--lan` (or `--ip 0.0.0.0` directly) to also accept connections from the local network.
++const isLan = process.argv.includes("--lan");
++const devIpIndex = process.argv.indexOf("--ip");
++const devIp = devIpIndex !== -1 ? process.argv[devIpIndex + 1] : (isLan ? "0.0.0.0" : undefined);
++
++// The origin LAN clients use to reach this server (e.g. http://172.16.21.31:8787). In `--lan` mode it
++// is auto-detected from the first non-internal interface. Override with `--public-url <origin>`.
++const publicUrlIndex = process.argv.indexOf("--public-url");
++let publicUrl = publicUrlIndex !== -1 ? process.argv[publicUrlIndex + 1] : undefined;
++if (isLan && publicUrl === undefined) {
++  const lanIp = Object.values(networkInterfaces())
++      .flat()
++      .find(iface => iface && !iface.internal && iface.family === "IPv4")?.address;
++  const portArgIndex = process.argv.indexOf("--port");
++  const port = portArgIndex !== -1 ? process.argv[portArgIndex + 1] : "8787";
++  if (lanIp) publicUrl = `http://${lanIp}:${port}`;
++}
++
+ // Generate the format blueprint module before Wrangler tries to bundle the backend. The output is
+ // gitignored, so it will not exist on a clean checkout.
+ execFileSync(
+@@ -215,6 +235,22 @@ for (const gk of gatekeepers) {
+     }
+   }
+ 
++  // In LAN mode the gatekeepers must advertise an origin LAN clients can reach, not the
++  // localhost default baked into each Worker's `env.BASE_URL ?? "http://localhost:8787/..."`.
++  // Without this, OAuth redirects (and generated URLs) point back at the client's own
++  // localhost and the connect flow breaks. A `BASE_URL` set in the gatekeeper's own config
++  // still wins.
++  if (publicUrl) {
++    config.vars = config.vars || {};
++    if (config.vars.BASE_URL === undefined) {
++      // The router serves each gatekeeper at /gatekeeper/<short>, where <short> is the service
++      // binding name (GATEKEEPER_GITHUB) minus the prefix, lowercased.
++      const routeSuffix =
++          bindingName(gk).slice("GATEKEEPER_".length).toLowerCase().replaceAll("_", "-");
++      config.vars.BASE_URL = `${publicUrl}/gatekeeper/${routeSuffix}`;
++    }
++  }
++
+   const outPath = join(gk.dir, "wrangler.dev.jsonc");
+   writeFileSync(outPath, JSON.stringify(config, null, 2) + "\n");
+   console.log(`generated: ${outPath}`);
+@@ -301,6 +337,7 @@ const configs = [
+ ];
+ 
+ const args = configs.flatMap(c => ["-c", c]);
++if (devIp) args.push("--ip", devIp);
+ const backendHost = process.env.VITE_BACKEND_HOST;
+ if (backendHost) {
+   let wranglerPort;
+PATCH
+  if git apply --check "$LAN_PATCH" 2>/dev/null; then
+    git apply "$LAN_PATCH"
+    say "  LAN patch 已套用"
+  else
+    echo "警告: LAN patch 無法套用（upstream 的 run-dev-server.js 可能已變更）。"
+    echo "      server 仍可啟動，但 --lan / --ip 不會作用。"
+  fi
+  rm -f "$LAN_PATCH"
+fi
+
+# ---------------------------------------------------------------------------
 # 5. 安裝依賴
 # ---------------------------------------------------------------------------
 say "pnpm install"

@@ -19,8 +19,9 @@
 2. 安裝 Node.js v24.19.0 LTS 到 `~/.local/node`（不需 root，並寫入 `~/.bashrc` 的 PATH）
 3. 安裝 pnpm 11.17.0（與 repo `package.json` 的 `packageManager` 一致）
 4. clone / 更新 `cloudflare-os` 原始碼（預設 `~/cloudflare-os`）
-5. `pnpm install` 安裝依賴（含 sharp / esbuild / workerd 等 postinstall）
-6. `pnpm run-local` 啟動本地 server
+5. **自動套用 `run-dev-server.js` 的 LAN patch**（upstream 尚未包含，見下）
+6. `pnpm install` 安裝依賴（含 sharp / esbuild / workerd 等 postinstall）
+7. `pnpm run-local` 啟動本地 server
 
 ### 用法
 
@@ -47,6 +48,11 @@ bash cloudflare-os-setup.sh --lan
 
 - 若腳本放在 cloudflare-os repo 目錄內執行，會自動偵測並直接用目前目錄，不會再 clone。
 - 若 `TARGET_DIR` 已存在但**不是** git repo，腳本會中止並要求先搬走/刪除。
+- clone 來源是 **upstream** `cloudflare/cloudflare-os`，不會包含本專案的 `run-dev-server.js` LAN
+  改動，所以腳本在 clone/更新後會自動用內嵌的 patch 套上去：
+  - 已套過（偵測到 `--lan`）就跳過；
+  - 套不上（upstream 未來改了該檔）會印出警告但不會中止，只是 `--lan` 不作用。
+- 對已有 repo 使用 `git pull --ff-only` 更新；若上游改動與本地 patch 衝突，會需手動處理。
 
 ---
 
