@@ -9,6 +9,29 @@
 
 ---
 
+## 背景：為什麼有這個腳本
+
+Cloudflare OS 官方 README 的 Quick Start 只有一句話——「裝好 pnpm，然後 `pnpm run-local`」。
+它假設你的機器已經有能用的 Node.js、正確版本的 pnpm、以及 LAN 環境不用管。
+實際上線後，[upstream 的 Issues](https://github.com/cloudflare/cloudflare-os/issues) 累積了一堆
+第一天上手的踩雷，例如：
+
+- **`pnpm crash during initial run`（#15）**：第一次 `pnpm install` 時 sharp / esbuild / workerd
+  等 postinstall 直接爆掉。最常見的原因就是**機器上根本沒有 Node.js**（`node: not found`），
+  但 README 沒說要先裝。
+- **`pnpm run-local cannot start on Windows`（#19）**：`run-local` 用 `execFileSync("pnpm", ...)`，
+  依賴 `pnpm` 在 PATH 上且能直接被 spawn；環境不同就 ENOENT。
+- **`Can we please get some getting started docs?`（#25）**：新手希望有一份「從零到能跑」的完整
+  步驟，而不是一行指令。
+- 此外，若用**非 repo 指定版本**的 pnpm 跑 install，還會踩
+  `ERR_PNPM_INVALID_SELECTOR Cannot parse the "^sharp" selector` 這類解析 bug（見
+  `pnpm-workspace.yaml` 的 `allowBuilds` / `minimumReleaseAge`），因為該語法有版本限制。
+
+本腳本把這些一次解決：自動裝 git / Node / pnpm（版本鎖定與 repo 一致）、clone 最新原始碼、
+套上 LAN patch、`pnpm install`、然後啟動。你只需要會跑一條指令。
+
+---
+
 ## 一、`cloudflare-os-setup.sh`（一鍵安裝）
 
 ### 功能
