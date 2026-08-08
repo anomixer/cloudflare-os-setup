@@ -33,6 +33,15 @@ Cloudflare OS upstream 的 quick start 假設機器已經安裝 Node.js 與正�
 
 ### 使用方式
 
+先 clone 本 setup repo 並進入目錄：
+
+```bash
+git clone https://github.com/anomixer/cloudflare-os-setup.git
+cd cloudflare-os-setup
+```
+
+接著執行安裝腳本：
+
 ```bash
 # 僅本機使用
 bash cloudflare-os-setup.sh
@@ -41,7 +50,7 @@ bash cloudflare-os-setup.sh
 bash cloudflare-os-setup.sh --lan
 ```
 
-一般模式網址為 `http://localhost:8787`；`--lan` 模式會額外印出偵測到的區網網址。
+腳本接著會 clone 或更新 upstream 的 `cloudflare/cloudflare-os`。一般模式網址為 `http://localhost:8787`；`--lan` 模式會額外印出偵測到的區網網址。
 
 ## 區網支援
 

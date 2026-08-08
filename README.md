@@ -33,6 +33,15 @@ This repository provides a reproducible setup path while those issues are being 
 
 ### Usage
 
+First clone this setup repository and enter its directory:
+
+```bash
+git clone https://github.com/anomixer/cloudflare-os-setup.git
+cd cloudflare-os-setup
+```
+
+Then run the setup script:
+
 ```bash
 # Local-only mode
 bash cloudflare-os-setup.sh
@@ -41,7 +50,7 @@ bash cloudflare-os-setup.sh
 bash cloudflare-os-setup.sh --lan
 ```
 
-The local-only server is available at `http://localhost:8787`. In LAN mode, the script also prints the detected LAN address.
+The script then clones or updates the upstream `cloudflare/cloudflare-os` repository. The local-only server is available at `http://localhost:8787`. In LAN mode, the script also prints the detected LAN address.
 
 ### Environment variables
 
