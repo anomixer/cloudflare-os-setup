@@ -1,5 +1,7 @@
 # Cloudflare OS Local Setup and LAN Support
 
+[繁體中文](README.zh-TW.md)
+
 A temporary setup and compatibility script for running [Cloudflare OS](https://github.com/cloudflare/cloudflare-os) locally while upstream installation, Windows, documentation, and LAN-related issues remain unresolved.
 
 > This is a stopgap. Once upstream handles Node.js installation, pnpm versioning, local-server port handling, and LAN binding, this repository may no longer be needed.

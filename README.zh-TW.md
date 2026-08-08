@@ -1,5 +1,7 @@
 # Cloudflare OS 本機安裝與區網支援
 
+[English](README.md)
+
 這是一個用來在 [Cloudflare OS](https://github.com/cloudflare/cloudflare-os) upstream 尚未補齊安裝、Windows、文件與區網支援前，協助本機執行的暫時性 setup 與相容性腳本。
 
 > 這是過渡方案。等 upstream 處理好 Node.js 安裝、pnpm 版本、local server port 與 LAN binding 後，本 repo 可能就不再需要。
